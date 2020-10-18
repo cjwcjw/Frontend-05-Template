@@ -1,0 +1,160 @@
+<html>
+    <header>
+        <style>
+            .cell {
+                width: 6px;
+                height: 6px;
+                border: 1px solid gray;
+                display: inline-block;
+                vertical-align: middle;
+            
+            }
+        </style>
+    </header>
+    <body>
+        <div class="map"></div>
+        <button onclick="saveMap()">保存地图</button>
+    </body>
+    <script>
+        class Sorted {
+            constructor(data,compare) {
+                this.data = data.slice()
+                this.compare = compare ? compare : ((a,b)=> { return (a - b)})
+            }
+            // 拿出一个最小的数
+            take() {
+                if (this.data.length === 0 ) {
+                    return 
+                }
+                let min = this.data[0]
+                let minIndex = 0
+                for (let i = 0; i <  this.data.length;i++) {
+                    if (this.compare(this.data[i], min) < 0 ) {
+                        min = this.data[i]
+                        minIndex = i
+                    }
+                }
+                // 这里取出元素不使用splice,splice删除元素会造成数组其他元素前移，复杂度增加，为O(n)
+                // 直接与最后一个交换，并删除最后一个元素，复杂度 O(n)
+                this.data[minIndex] = this.data[this.data.length - 1]
+                this.data.pop()
+                return min
+            }
+            give(v) {
+                this.data.push(v)
+            }
+            length() {
+                return this.data.length 
+            }
+        }
+        let size = 100
+        let mousedown = false
+        let clear = false
+        let map = localStorage.getItem('map') ? JSON.parse(localStorage.getItem('map')) : Array(size*size).fill(0)
+    
+        function renderMap() {
+            let MapDom = document.getElementsByClassName('map')[0]
+            for(let i = 0; i < map.length;i++) {
+                let cellDom = document.createElement('div')
+                cellDom.classList.add('cell')
+                cellDom.classList.add('cell' + String(i))
+                if (map[i] === 1) {
+                    cellDom.style.backgroundColor= "black";
+                } 
+                cellDom.addEventListener('mousemove',function(){
+                    if (mousedown) {
+                        if (clear) {
+                            cellDom.style.backgroundColor= "";
+                            map[i] = 0
+                        } else {
+                            cellDom.style.backgroundColor= "black";
+                            map[i] = 1
+                        }
+                            
+                    }
+                })
+                MapDom.appendChild(cellDom)
+                if ((i + 1) % size === 0) {
+                    MapDom.appendChild(document.createElement('br'))
+                } 
+            } 
+        }
+        function saveMap () {
+            localStorage.setItem('map', JSON.stringify(map))
+        }
+
+        renderMap()
+        document.addEventListener('mousedown', function(e) {
+            mousedown = true
+            // 右键清除
+            if (e.which === 3){
+                clear = true
+            }
+        })
+        document.addEventListener('mouseup', function() {
+            mousedown = false
+            clear = false
+        })
+        // 屏蔽右键菜单
+        document.addEventListener("contextmenu", function(e){
+            e.preventDefault()
+        });
+
+        // 计算坐标与终点的距离
+        function calculate(point,end) {
+            return Math.sqrt((point[0] - end[0])**2 + (point[1] - end[1])**2)
+        }
+
+        async function path(map,start,end) {
+            // 计算坐标与终点的最短距离
+            let queue = new Sorted([start],((a,b)=> { return (calculate(a,end) - calculate(b,end))}))
+        
+            async function insert(x,y,pre){
+                if(x >= 0 && x < size && y >=0 && y < size) {
+                    if (map[y*size +x] === 0 ){
+                        queue.give([x,y])
+                    
+                        await sleep(15)
+
+                        // 寻路记录上个节点
+                        map[y*size +x] = pre
+                        let cellDom = document.getElementsByClassName('cell' + String(y*size +x))[0]
+                        cellDom.style.backgroundColor = "lightgreen"
+                    }
+                }
+            }
+            // 遍历到清空该队列
+            while (queue.length()) {
+                let [x,y] = queue.take()
+                console.log([x,y])
+                if (x === end[0] && y === end[1]) {
+                    let preIndex = map[y*size +x]
+                    
+                    while (preIndex[0] !== start[0] ||  preIndex[1] !== start[1]){
+                        await sleep(30)
+                        let cellDom = document.getElementsByClassName('cell' + String(preIndex[1]*size +preIndex[0]))[0]
+                        cellDom.style.backgroundColor = "red"
+                        preIndex = map[preIndex[1]*size + preIndex[0]]
+                    }
+                    return preIndex
+                } 
+                //上下左右四点都加入
+                await insert(x + 1, y, [x,y])
+                await insert(x - 1, y, [x,y])
+                await insert(x, y - 1, [x,y])
+                await insert(x, y + 1, [x,y])
+               // 对角
+                await insert(x + 1 , y + 1, [x,y])
+                await insert(x - 1 , y - 1, [x,y])
+                await insert(x - 1 , y + 1, [x,y])
+                await insert(x + 1 , y - 1, [x,y])
+            }
+            return null
+        }
+        function sleep (t) {
+            return new Promise(function(resolve){
+                setTimeout(resolve,t)
+            })
+        }
+    </script>
+</html>
