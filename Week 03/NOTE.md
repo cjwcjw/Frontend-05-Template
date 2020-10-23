@@ -9,20 +9,20 @@
 <Number>  
 |<MultiplicationExpression><*><Number>
 |<MultiplicationExpression></><Number>
-`  
+`    
 元单元一个数字也看作乘法表达式；乘法表达式加乘除运算符加数字也算作乘法表达式。  
 3. 加法产生式：
 `<AdditionExpression>::=
 <MultiplicationExpression>
 |<AdditionExpression><+><MultiplicationExpression>
 |<AdditionExpression><-><MultiplicationExpression>
-`  
-最小单元是乘法表达式，"加法是由两个乘法相加的"。  
+`    
+最小单元是乘法表达式，"加法是由两个乘法相加的"。      
 4. 最上层产生式：
  `<Expression>::=
  <AdditionExpression><EOF>
- `  
- 最总向左扫描归元成一个加法产生式，eof表示总结符 end of file。   
+ `    
+ 最总向左扫描归元成一个加法产生式，eof表示总结符 end of file。     
  ## LL算法｜词法分析
 1. 可以反复调用 exec() 方法来遍历字符串中的所有匹配文本。当 exec() 再也找不到匹配的文本时，它将返回 null，并把 lastIndex 属性重置为 0。  
 2. `[]` 方括号用于查找某个范围内的字符, `|`表示或,`()` 表示分组功能。  
