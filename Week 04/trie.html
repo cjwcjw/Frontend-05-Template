@@ -1,0 +1,41 @@
+<html>
+<script>
+    class Trie {
+        constructor() {
+            this.tree = {}
+            // 终止符号
+            this.$ = Symbol('$')
+        }
+        insert(word){
+          let node = this.tree
+          for (let w of word) {
+              if(!node[w]) {
+                  node[w] = {}
+              }
+              node = node[w]
+          }
+          if (!node[this.$] && node[this.$] !== 0 ) {
+              node[this.$] = 0
+          }
+          node[this.$] ++;
+        }
+        most () {
+            let maxCount = 0
+            let maxWord = null
+            let visit = (node, word) => {
+                if (node[this.$] && node[this.$] > maxCount) {
+                    maxCount =  node[this.$]
+                    maxWord = word
+                }
+                // 循环子元素递归
+                for (let k in node) {
+                    visit(node[k], (word + k))
+                }
+            }
+            visit(this.tree, '')
+            console.log(maxCount)
+            console.log(maxWord)
+        }
+    }
+</script>
+</html>

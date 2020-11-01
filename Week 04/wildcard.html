@@ -1,0 +1,59 @@
+<html>
+<script>
+    function find(source,pattern) {
+        let starCount = 0;
+        for (let i=0; i < pattern.length; i++) {
+            if (pattern[i] === '*')
+                starCount ++;
+        }
+        // 如果没有*号
+        if (starCount === 0) {
+            if (source.length === pattern.length) {
+                for (let i=0; i < source.length; i++) {
+                    if (source[i] !== pattern[i] && pattern[i] !== '?') {
+                        return false
+                    }
+                }
+                return true
+            }
+            return false
+        }
+        // 找出第一个*号,同时一个*之前的文字也在此匹配
+        let i =0
+        while (pattern[i] !=='*') {
+            if (source[i] !== pattern[i] && pattern[i] !== '?') {
+                return false
+            }
+            i++;
+        }
+        let lastIndex = i
+        // 从第一个*之后开始分割匹配了，把长串字符按*分割分别匹配
+        for(let c=0;c < starCount - 1;c++) {
+            i++;
+            // 匹配*号之后的字符串
+            let subPattern = ''
+            while(pattern[i] !=='*') {
+                subPattern += pattern[i]
+                i++
+            }
+            // ？ 通配符用正则去处理了
+            let reg = new RegExp(subPattern.replace('/\?/g', '[\\s\\S]'), 'g')
+            reg.lastIndex = lastIndex
+            let  result= reg.exec(source)
+            lastIndex = reg.lastIndex
+            // 匹配不出来或者长度不一致
+            if (!result || result[0].length !== subPattern.length) {
+                return false
+            }
+        }
+        //匹配最后一个*后的数据, 从后往前匹配, pattern[pattern.length - l] !== '*' 防止最后一位是 *
+        console.log(lastIndex)
+        for (let l=0;l <= source.length - lastIndex && pattern[pattern.length - l] !== '*';l++) {
+            if (source[source.length - l] !== pattern[pattern.length -l] && pattern[pattern.length -l] !== '?') {
+                return false
+            }
+        }
+        return true
+    }
+</script>
+</html>
