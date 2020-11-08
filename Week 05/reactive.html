@@ -1,0 +1,85 @@
+<html>
+<head>
+    <style>
+        #color {
+            width: 200px;
+            height: 200px;
+        }
+    </style>
+
+</head>
+<body>
+<input id="r" type="range" min="0" max="255"/>
+<input id="g" type="range" min="0" max="255"/>
+<input id="b" type="range" min="0" max="255"/>
+<div id="color"></div>
+</body>
+<script>
+    let callbacks = new Map()
+    let usedReactivies = []
+    let reactivies = new Map()
+
+    let obj = reactive( {r:0, g:0, b:0})
+
+    effect(()=>{
+       document.getElementById('r').value = obj.r
+    })
+    effect(()=>{
+        document.getElementById('g').value = obj.g
+    })
+    effect(()=>{
+        document.getElementById('b').value = obj.b
+    })
+    effect(()=>{
+        document.getElementById('color').style.background = `rgb(${obj.r},${obj.g},${obj.b})`
+    })
+
+    document.getElementById('r').addEventListener('input', event =>  obj.r = event.target.value )
+    document.getElementById('g').addEventListener('input', event =>  obj.g = event.target.value)
+    document.getElementById('b').addEventListener('input', event => obj.b = event.target.value)
+
+    function effect(callback) {
+        usedReactivies = []
+        callback()
+        for (let usedReactive of usedReactivies) {
+            if (!callbacks.has(usedReactive[0])){
+                callbacks.set(usedReactive[0], new Map())
+            }
+            if (!callbacks.get(usedReactive[0]).has(usedReactive[1])) {
+                callbacks.get(usedReactive[0]).set(usedReactive[1], [])
+            }
+            callbacks.get(usedReactive[0]).get(usedReactive[1]).push(callback)
+        }
+
+    }
+
+    function reactive(obj){
+        // 防止重复生产 proxy
+        if (reactivies.get(obj)) {
+            return reactivies.get(obj)
+        }
+        let  proxy = new Proxy(obj,{
+            set(props,key,value) {
+                props[key] = value
+                if ( callbacks.get(props) && callbacks.get(props).get(key)) {
+                    for(let callback of callbacks.get(props).get(key)) {
+                        callback()
+                    }
+                }
+            },
+            get(props,key) {
+                // 先执行一遍callback把里面涉及到的属性存起来
+                usedReactivies.push([props, key])
+                // 多层监听的情况
+                if (typeof(props[key])=== 'object') {
+                    return reactive(props[key])
+                }
+                return props[key]
+            }
+        })
+        reactivies.set(obj, proxy)
+        return proxy
+    }
+
+</script>
+</html>
