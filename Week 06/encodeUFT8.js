@@ -33,3 +33,4 @@ function encodeUTF8 (string) {
     }
     return UTF8Codes
 }
+encodeUTF8('看的很烦')
