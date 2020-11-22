@@ -1,0 +1,53 @@
+<html>
+  <body>
+    <div id="mountNode"></div>
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-3.1.0/build/g6.js"></script>
+    <script>
+      function  renderData(data, result, level=1,parent= null) {
+        let x= level * 100
+        let y = 100
+        console.log(data)
+        if (!data) {
+            return 
+        }
+        for (let key in data) {
+            result.nodes.push({
+                id: key,
+                label:key,
+                x: x,
+                y: y
+            })
+            y = y + 100
+            if (parent) {
+                result.edges.push(
+                {
+                    source: parent,  // 起始点 id
+                    target: key,  // 目标点 id
+                })
+            }
+            renderData(data[key], result, level+1, key)
+
+        }
+      }
+      let data = {
+          'Object': {
+              'Array':{'Int8Array': null, 'Int16Array': null,'Int32Array': null, 'Uint8Array': null},
+              'Number': null, 'String': null, 'Boolean': null, 'Symbol': null,'BigInt': null,'Map': null,'Set': null,'ArrayBuffer': null},
+         }
+      let result = {nodes:[], edges:[]}
+      renderData(data,result)  
+      console.log(result)
+      // 创建 G6 图实例
+      const graph = new G6.Graph({
+        container: 'mountNode', // 指定图画布的容器 id，与第 9 行的容器对应
+        // 画布宽高
+        width: 1000,
+        height: 1000
+      });
+      // 读取数据
+      graph.data(result);
+      // 渲染图
+      graph.render();
+    </script>
+  </body>
+</html>
